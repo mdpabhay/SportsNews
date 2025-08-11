@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cricket Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Cricket Tracker — Matches</h1>
+    <div id="matches">
+      {% if matches %}
+        <ul class="match-list">
+          {% for m in matches %}
+            <li>
+              <a href="/match/{{ m.match_id }}"><strong>{{ m.match_id }}</strong></a>
+              &nbsp; — {{ m.match_description or '' }}
+              <div class="meta">Start: {{ m.start_time or 'TBD' }} • Status: <span class="status">{{ m.status }}</span></div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No matches yet. Worker may not have run or fixtures couldn't be found.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

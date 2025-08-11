@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Match {{ match.match_id }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="/">← Back</a>
+    <h1>Match: {{ match.match_id }}</h1>
+    <p><strong>{{ match.match_description }}</strong></p>
+    <p>Start: {{ match.start_time or 'TBD' }} • Status: <span id="status">{{ match.status }}</span></p>
+
+    <div class="tabs">
+      <button onclick="showTab('info')">Match Info</button>
+      <button onclick="showTab('squads')">Squads</button>
+      <button onclick="showTab('scorecard')">Scorecard</button>
+      <button onclick="showTab('live')">Live</button>
+    </div>
+
+    <div id="tab-content">
+      <div id="info" class="tab-pane" style="display:block;">
+        <pre id="info-pre">{{ match.match_info | tojson }}</pre>
+      </div>
+      <div id="squads" class="tab-pane" style="display:none;">
+        <pre id="squads-pre">{{ match.squads | tojson }}</pre>
+      </div>
+      <div id="scorecard" class="tab-pane" style="display:none;">
+        <pre id="scorecard-pre">{{ match.scorecard | tojson }}</pre>
+      </div>
+      <div id="live" class="tab-pane" style="display:none;">
+        <pre id="live-pre">{{ match.live_data | tojson }}</pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+const matchId = "{{ match.match_id }}";
+
+function showTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(e => e.style.display = 'none');
+  document.getElementById(name).style.display = 'block';
+}
+
+async function fetchLive() {
+  try {
+    const r = await fetch(`/api/matches/${matchId}/live`);
+    if (!r.ok) return;
+    const j = await r.json();
+    document.getElementById('status').textContent = j.status || '';
+    document.getElementById('live-pre').textContent = JSON.stringify(j.live_data, null, 2);
+    document.getElementById('scorecard-pre').textContent = JSON.stringify(j.scorecard, null, 2);
+  } catch (e) {
+    console.error(e);
+  }
+}
+setInterval(fetchLive, 20000);
+</script>
+</body>
+</html>

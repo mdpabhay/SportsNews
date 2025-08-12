@@ -7,6 +7,7 @@ A FastAPI-based web app that scrapes Cricbuzz to display matches grouped by stat
 ### Table of Contents
 - About the Project
 - Definitions
+- UI
 - Features
 - Benefits
 - Tech Stack and Tools
@@ -26,7 +27,12 @@ Cricket Scraper provides a single-page interface that fetches match listings and
 - Live: Matches in progress, delayed, or at a break (e.g., “Live,” “Stumps,” “Innings Break”).[4][3][2]
 - Upcoming: Scheduled or preview states prior to start.[3][2]
 - Completed: Finished games with a result (e.g., “won by,” “tied,” “no result”).[2][4][3]
-  
+
+
+### ![Cricket Scraper UI]
+
+(https://raw.githubusercontent.com/<username>/<repo>/main/assets/images/ui.png)
+
 #### ✨ Key Features
 
 ## 📅 Upcoming Fixtures

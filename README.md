@@ -29,9 +29,11 @@ Cricket Scraper provides a single-page interface that fetches match listings and
 - Completed: Finished games with a result (e.g., “won by,” “tied,” “no result”).[2][4][3]
 
 
-### ![Cricket Scraper UI]
+### ! Cricket Scraper UI
 
-(https://raw.githubusercontent.com/<username>/<repo>/main/assets/images/ui.png)
+<p align="center">
+  <img src="https://github.com/mdpabhay/Crex_Scraper/blob/main/static/Screenshot%202025-08-12%20233745.png?raw=true?raw=true" alt="App screenshot" width="1000">
+</p>
 
 #### ✨ Key Features
 

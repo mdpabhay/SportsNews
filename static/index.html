@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cricket Scraper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f5f8fb;         /* light background */
+      --panel: #e3ecf5;      /* light blue-gray panel */
+      --muted: #6b7280;      /* muted gray text */
+      --accent: #22c55e;     /* green highlight */
+      --accent2: #3b82f6;    /* bright blue */
+      --danger: #ef4444;     /* red alert */
+      --text: #222;          /* dark text for readability */
+      --card: #ffffff;       /* card background white */
+      --divider: #c3d3e6;    /* light blue-gray borders */
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+    }
+    header {
+      background: linear-gradient(135deg, var(--panel), #d2e4f7);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--divider);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { margin: 0; font-size: 20px; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .tab {
+      padding: 8px 14px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--divider);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .tab.active {
+      background: var(--accent2);
+      color: white;
+      border-color: var(--accent2);
+      opacity: 1;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .status-section { display: none; }
+    .status-section.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: transform 0.1s ease, border-color 0.2s ease;
+    }
+    .card:hover { transform: translateY(-2px); border-color: var(--accent2); }
+    .card-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+    .card-sub { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .card-score { font-size: 14px; color: var(--text); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      margin-right: 6px;
+      border: 1px solid var(--divider);
+    }
+    .badge.live { background: rgba(34,197,94,0.15); color: var(--accent); border-color: rgba(34,197,94,0.35); }
+    .badge.upcoming { background: rgba(59,130,246,0.15); color: var(--accent2); border-color: rgba(59,130,246,0.35); }
+    .badge.completed { background: rgba(239,68,68,0.15); color: var(--danger); border-color: rgba(239,68,68,0.35); }
+
+    .empty { color: var(--muted); text-align: center; padding: 20px; border: 1px dashed var(--divider); border-radius: 10px; }
+
+    /* Drawer for scorecard */
+    .drawer {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: min(560px, 100%);
+      height: 100%;
+      background: var(--card);
+      border-left: 1px solid var(--divider);
+      box-shadow: -8px 0 24px rgba(0,0,0,0.1);
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel);
+    }
+    .drawer-title { font-weight: 600; font-size: 16px; }
+    .drawer-close {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--divider);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .drawer-body {
+      padding: 12px 16px 40px;
+      overflow: auto;
+    }
+
+    .innings {
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .innings-header {
+      padding: 10px 12px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .table th, .table td {
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .section-title {
+      margin: 10px 0 6px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .loading { color: var(--muted); padding: 12px; }
+    .error { color: var(--danger); padding: 12px; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .btn {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--divider);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .btn.primary { border-color: var(--accent2); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cricket Scraper</h1>
+    <div class="tabs">
+      <button class="tab active" data-tab="Live">Live</button>
+      <button class="tab" data-tab="Upcoming">Upcoming</button>
+      <button class="tab" data-tab="Completed">Completed</button>
+    </div>
+    <div class="toolbar">
+      <button id="refreshBtn" class="btn primary">Refresh Matches</button>
+      <span id="statusMsg" class="loading"></span>
+    </div>
+  </header>
+
+  <div class="container">
+    <section id="Live" class="status-section active">
+      <div id="liveGrid" class="grid"></div>
+      <div id="liveEmpty" class="empty" style="display:none;">No live matches found.</div>
+    </section>
+    <section id="Upcoming" class="status-section">
+      <div id="upcomingGrid" class="grid"></div>
+      <div id="upcomingEmpty" class="empty" style="display:none;">No upcoming matches found.</div>
+    </section>
+    <section id="Completed" class="status-section">
+      <div id="completedGrid" class="grid"></div>
+      <div id="completedEmpty" class="empty" style="display:none;">No completed matches found.</div>
+    </section>
+  </div>
+
+  <!-- Drawer for scorecard -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-title">Scorecard</div>
+      <button class="drawer-close" id="drawerClose">Close</button>
+    </div>
+    <div id="drawerBody" class="drawer-body">
+      <div class="loading">Select a match to load the scorecard.</div>
+    </div>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.status-section');
+    const statusMsg = document.getElementById('statusMsg');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    const drawer = document.getElementById('drawer');
+    const drawerBody = document.getElementById('drawerBody');
+    const drawerClose = document.getElementById('drawerClose');
+
+    let matchesData = { Live: [], Upcoming: [], Completed: [] };
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const key = tab.dataset.tab;
+        sections.forEach(s => s.classList.remove('active'));
+        document.getElementById(key).classList.add('active');
+      });
+    });
+
+    drawerClose.addEventListener('click', () => closeDrawer());
+    function openDrawer() {
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+
+    refreshBtn.addEventListener('click', () => {
+      loadMatches(true);
+    });
+
+    async function loadMatches(force = false) {
+      try {
+        statusMsg.textContent = 'Loading matches...';
+        const res = await fetch('/api/matches' + (force ? ('?t=' + Date.now()) : ''));
+        if (!res.ok) throw new Error('Failed to fetch matches');
+        const data = await res.json();
+        matchesData = { Live: data.Live || [], Upcoming: data.Upcoming || [], Completed: data.Completed || [] };
+        renderMatches();
+        statusMsg.textContent = 'Updated';
+        setTimeout(() => statusMsg.textContent = '', 1500);
+      } catch (err) {
+        console.error(err);
+        statusMsg.textContent = 'Error loading matches';
+      }
+    }
+
+    function makeCard(match) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <div class="card-title">${escapeHtml(match.title)}</div>
+        <div class="card-sub">
+          <span class="badge ${badgeClass(match.status)}">${match.status}</span>
+          <span>${escapeHtml(match.format)}</span>
+        </div>
+        <div class="card-sub">${escapeHtml(match.venue)} • ${escapeHtml(match.date)}</div>
+        <div class="card-score">${escapeHtml(match.current_score || match.result || 'Details')}</div>
+      `;
+      div.addEventListener('click', () => showScorecard(match));
+      return div;
+    }
+
+    function badgeClass(status) {
+      const s = String(status || '').toLowerCase();
+      if (s === 'live') return 'live';
+      if (s === 'completed') return 'completed';
+      return 'upcoming';
+    }
+
+    function renderMatches() {
+      const grids = {
+        Live: document.getElementById('liveGrid'),
+        Upcoming: document.getElementById('upcomingGrid'),
+        Completed: document.getElementById('completedGrid')
+      };
+      const empties = {
+        Live: document.getElementById('liveEmpty'),
+        Upcoming: document.getElementById('upcomingEmpty'),
+        Completed: document.getElementById('completedEmpty')
+      };
+
+      Object.keys(grids).forEach(key => {
+        const list = matchesData[key] || [];
+        grids[key].innerHTML = '';
+        if (!list.length) {
+          empties[key].style.display = 'block';
+        } else {
+          empties[key].style.display = 'none';
+          list.forEach(m => grids[key].appendChild(makeCard(m)));
+        }
+      });
+    }
+
+    async function showScorecard(match) {
+      openDrawer();
+      drawerBody.innerHTML = `<div class="loading">Loading scorecard for ${escapeHtml(match.title)}...</div>`;
+      try {
+        const res = await fetch(`/api/match/${encodeURIComponent(match.id)}`);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || 'Failed to fetch match details');
+        }
+        const details = await res.json();
+        renderScorecard(match, details);
+      } catch (e) {
+        console.error(e);
+        drawerBody.innerHTML = `<div class="error">Unable to load scorecard.</div>`;
+      }
+    }
+
+    function renderScorecard(match, details) {
+      const sc = details.scorecard;
+      if (!sc || !sc.innings || Object.keys(sc.innings).length === 0) {
+        drawerBody.innerHTML = `<div class="error">Scorecard not available.</div>`;
+        return;
+      }
+      const title = `
+        <div class="drawer-title">${escapeHtml(match.title)}</div>
+        <div class="card-sub" style="margin-top:4px;">
+          <span class="badge ${badgeClass(match.status)}">${match.status}</span>
+          <span>${escapeHtml(match.format)} • ${escapeHtml(match.venue)} • ${escapeHtml(match.date)}</span>
+        </div>
+      `;
+
+      let html = title;
+
+      for (const key of Object.keys(sc.innings)) {
+        const inng = sc.innings[key];
+        html += `
+          <div class="innings">
+            <div class="innings-header">
+              <div>${escapeHtml(inng.team)}</div>
+              <div>${escapeHtml(inng.score)}</div>
+            </div>
+            <div style="padding: 10px 12px;">
+              <div class="section-title">Batting</div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Batter</th>
+                    <th>Dismissal</th>
+                    <th>R</th>
+                    <th>B</th>
+                    <th>4s</th>
+                    <th>6s</th>
+                    <th>SR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${inng.batting.map(b => `
+                    <tr>
+                      <td>${escapeHtml(b.player)}</td>
+                      <td>${escapeHtml(b.dismissal)}</td>
+                      <td>${escapeHtml(b.runs)}</td>
+                      <td>${escapeHtml(b.balls)}</td>
+                      <td>${escapeHtml(b.fours)}</td>
+                      <td>${escapeHtml(b.sixes)}</td>
+                      <td>${escapeHtml(b.strike_rate)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+
+              <div class="section-title" style="margin-top:10px;">Bowling</div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Bowler</th>
+                    <th>O</th>
+                    <th>M</th>
+                    <th>R</th>
+                    <th>W</th>
+                    <th>Econ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${inng.bowling.map(bw => `
+                    <tr>
+                      <td>${escapeHtml(bw.player)}</td>
+                      <td>${escapeHtml(bw.overs)}</td>
+                      <td>${escapeHtml(bw.maidens)}</td>
+                      <td>${escapeHtml(bw.runs)}</td>
+                      <td>${escapeHtml(bw.wickets)}</td>
+                      <td>${escapeHtml(bw.economy)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      drawerBody.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    loadMatches();
+  </script>
+</body>
+</html>

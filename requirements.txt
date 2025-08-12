@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-playwright
-apscheduler
-python-dotenv
-python-dateutil
-jinja2
-aiofiles

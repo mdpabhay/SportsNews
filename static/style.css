@@ -1,7 +1,0 @@
-body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
-.container { max-width: 1000px; margin: auto; }
-.match-list { list-style: none; padding: 0; }
-.match-list li { background: #fff; margin-bottom: 8px; padding: 10px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.meta { color: #666; font-size: 0.9em; margin-top: 6px; }
-.tabs button { margin-right: 8px; padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-.tab-pane pre { background: #f0f0f0; padding: 10px; border-radius: 6px; max-height: 50vh; overflow:auto; }
